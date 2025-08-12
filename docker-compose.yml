@@ -1,0 +1,29 @@
+﻿services:
+  postgres:
+    image: postgres:15
+    container_name: postgres-customers
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: appuser
+      POSTGRES_DB: customersdb
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U appuser -d customersdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    container_name: spring-jdbc-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/customersdb
+      SPRING_DATASOURCE_USERNAME: appuser
+      SPRING_DATASOURCE_PASSWORD: appuser
+      SPRING_SQL_INIT_MODE: always
+    ports:
+      - "8080:8080"
